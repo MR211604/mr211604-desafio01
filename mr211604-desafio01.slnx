@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Biblioteca.BL/Biblioteca.BL.csproj" />
+  <Project Path="Biblioteca.Common/Biblioteca.Common.csproj" />
+  <Project Path="Biblioteca.DAL/Biblioteca.DAL.csproj" />
+  <Project Path="Biblioteca.Entities/Biblioteca.Entities.csproj" />
+  <Project Path="mr211604-desafio01/mr211604-desafio01.csproj" />
+</Solution>

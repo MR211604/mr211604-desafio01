@@ -3,26 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Biblioteca.Entities.Models;
-using mr211604_desafio01.Data;
+using Biblioteca.BL.Interfaces;
+using Biblioteca.Entities.Dtos;
 
 namespace mr211604_desafio01.Controllers
 {
     public class CategoriasController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly ICategoriaService _categoriaService;
 
-        public CategoriasController(AppDbContext context)
+        public CategoriasController(ICategoriaService categoriaService)
         {
-            _context = context;
+            _categoriaService = categoriaService;
         }
 
         // GET: Categorias
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categorias.ToListAsync());
+            return View(await _categoriaService.GetAllCategoriasAsync());
         }
 
         // GET: Categorias/Details/5
@@ -33,8 +31,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var categoria = await _context.Categorias
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var categoria = await _categoriaService.GetCategoriaByIdAsync(id.Value);
             if (categoria == null)
             {
                 return NotFound();
@@ -54,15 +51,14 @@ namespace mr211604_desafio01.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre")] Categoria categoria)
+        public async Task<IActionResult> Create(CategoriaDto categoriaDto)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(categoria);
-                await _context.SaveChangesAsync();
+                await _categoriaService.InsertCategoriaAsync(categoriaDto);
                 return RedirectToAction(nameof(Index));
             }
-            return View(categoria);
+            return View(categoriaDto);
         }
 
         // GET: Categorias/Edit/5
@@ -73,7 +69,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var categoria = await _context.Categorias.FindAsync(id);
+            var categoria = await _categoriaService.GetCategoriaByIdAsync(id.Value);
             if (categoria == null)
             {
                 return NotFound();
@@ -86,34 +82,18 @@ namespace mr211604_desafio01.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre")] Categoria categoria)
+        public async Task<IActionResult> Edit(int id, CategoriaDto categoriaDto)
         {
-            if (id != categoria.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                try
+                var result = await _categoriaService.UpdateCategoriaAsync(categoriaDto);
+                if (result == null)
                 {
-                    _context.Update(categoria);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CategoriaExists(categoria.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(categoria);
+            return View(categoriaDto);
         }
 
         // GET: Categorias/Delete/5
@@ -124,8 +104,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var categoria = await _context.Categorias
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var categoria = await _categoriaService.GetCategoriaByIdAsync(id.Value);
             if (categoria == null)
             {
                 return NotFound();
@@ -139,19 +118,8 @@ namespace mr211604_desafio01.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var categoria = await _context.Categorias.FindAsync(id);
-            if (categoria != null)
-            {
-                _context.Categorias.Remove(categoria);
-            }
-
-            await _context.SaveChangesAsync();
+            await _categoriaService.DeleteCategoriaAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool CategoriaExists(int id)
-        {
-            return _context.Categorias.Any(e => e.Id == id);
         }
     }
 }

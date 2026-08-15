@@ -1,4 +1,4 @@
-@model IEnumerable<Biblioteca.Entities.Models.Libro>
+@model IEnumerable<Biblioteca.Entities.Dtos.LibroDto>
 
 @{
     ViewData["Title"] = "Index";
@@ -19,10 +19,10 @@
                 @Html.DisplayNameFor(model => model.FechaPublicacion)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Autor)
+                @Html.DisplayNameFor(model => model.AutorId)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Categoria)
+                @Html.DisplayNameFor(model => model.CategoriaId)
             </th>
             <th></th>
         </tr>
@@ -37,15 +37,15 @@
                 @Html.DisplayFor(modelItem => item.FechaPublicacion)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Autor.Apellido)
+                @Html.DisplayFor(modelItem => item.AutorId)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Categoria.Nombre)
+                @Html.DisplayFor(modelItem => item.CategoriaId)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Codigo">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Codigo">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Codigo">Delete</a>
             </td>
         </tr>
 }

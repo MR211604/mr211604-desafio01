@@ -3,26 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Biblioteca.Entities.Models;
-using mr211604_desafio01.Data;
+using Biblioteca.BL.Interfaces;
+using Biblioteca.Entities.Dtos;
 
 namespace mr211604_desafio01.Controllers
 {
     public class AutoresController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAutorService _autorService;
 
-        public AutoresController(AppDbContext context)
+        public AutoresController(IAutorService autorService)
         {
-            _context = context;
+            _autorService = autorService;
         }
 
         // GET: Autores
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Autores.ToListAsync());
+            return View(await _autorService.GetAllAutoresAsync());
         }
 
         // GET: Autores/Details/5
@@ -33,8 +31,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var autor = await _context.Autores
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var autor = await _autorService.GetAutorByIdAsync(id.Value);
             if (autor == null)
             {
                 return NotFound();
@@ -54,15 +51,14 @@ namespace mr211604_desafio01.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Apellido")] Autor autor)
+        public async Task<IActionResult> Create(AutorDto autorDto)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(autor);
-                await _context.SaveChangesAsync();
+                await _autorService.InsertAutorAsync(autorDto);
                 return RedirectToAction(nameof(Index));
             }
-            return View(autor);
+            return View(autorDto);
         }
 
         // GET: Autores/Edit/5
@@ -73,7 +69,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var autor = await _context.Autores.FindAsync(id);
+            var autor = await _autorService.GetAutorByIdAsync(id.Value);
             if (autor == null)
             {
                 return NotFound();
@@ -86,34 +82,23 @@ namespace mr211604_desafio01.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Apellido")] Autor autor)
+        public async Task<IActionResult> Edit(int id, AutorDto autorDto)
         {
-            if (id != autor.Id)
+            if (id != autorDto.Codigo)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                try
+                var result = await _autorService.UpdateAutorAsync(autorDto);
+                if (result == null)
                 {
-                    _context.Update(autor);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AutorExists(autor.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(autor);
+            return View(autorDto);
         }
 
         // GET: Autores/Delete/5
@@ -124,8 +109,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var autor = await _context.Autores
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var autor = await _autorService.GetAutorByIdAsync(id.Value);
             if (autor == null)
             {
                 return NotFound();
@@ -139,19 +123,8 @@ namespace mr211604_desafio01.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var autor = await _context.Autores.FindAsync(id);
-            if (autor != null)
-            {
-                _context.Autores.Remove(autor);
-            }
-
-            await _context.SaveChangesAsync();
+            await _autorService.DeleteAutorAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool AutorExists(int id)
-        {
-            return _context.Autores.Any(e => e.Id == id);
         }
     }
 }

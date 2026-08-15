@@ -1,7 +1,7 @@
-﻿using Biblioteca.Entities.Models;
+using Biblioteca.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace mr211604_desafio01.Data
+namespace Biblioteca.DAL.Data
 {
     public class AppDbContext : DbContext
     {

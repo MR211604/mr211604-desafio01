@@ -4,26 +4,28 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Biblioteca.Entities.Models;
-using mr211604_desafio01.Data;
+using Biblioteca.BL.Interfaces;
+using Biblioteca.Entities.Dtos;
 
 namespace mr211604_desafio01.Controllers
 {
     public class LibrosController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly ILibroService _libroService;
+        private readonly IAutorService _autorService;
+        private readonly ICategoriaService _categoriaService;
 
-        public LibrosController(AppDbContext context)
+        public LibrosController(ILibroService libroService, IAutorService autorService, ICategoriaService categoriaService)
         {
-            _context = context;
+            _libroService = libroService;
+            _autorService = autorService;
+            _categoriaService = categoriaService;
         }
 
         // GET: Libros
         public async Task<IActionResult> Index()
         {
-            var appDbContext = _context.Libros.Include(l => l.Autor).Include(l => l.Categoria);
-            return View(await appDbContext.ToListAsync());
+            return View(await _libroService.GetAllLibrosAsync());
         }
 
         // GET: Libros/Details/5
@@ -34,10 +36,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var libro = await _context.Libros
-                .Include(l => l.Autor)
-                .Include(l => l.Categoria)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var libro = await _libroService.GetLibroByIdAsync(id.Value);
             if (libro == null)
             {
                 return NotFound();
@@ -47,10 +46,10 @@ namespace mr211604_desafio01.Controllers
         }
 
         // GET: Libros/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AutorId"] = new SelectList(_context.Autores, "Id", "Apellido");
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre");
+            ViewData["AutorId"] = new SelectList(await _autorService.GetAllAutoresAsync(), "Codigo", "Apellido");
+            ViewData["CategoriaId"] = new SelectList(await _categoriaService.GetAllCategoriasAsync(), "Codigo", "Nombre");
             return View();
         }
 
@@ -59,17 +58,16 @@ namespace mr211604_desafio01.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Titulo,FechaPublicacion,AutorId,CategoriaId")] Libro libro)
+        public async Task<IActionResult> Create(LibroDto libroDto)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(libro);
-                await _context.SaveChangesAsync();
+                await _libroService.InsertLibroAsync(libroDto);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AutorId"] = new SelectList(_context.Autores, "Id", "Apellido", libro.AutorId);
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", libro.CategoriaId);
-            return View(libro);
+            ViewData["AutorId"] = new SelectList(await _autorService.GetAllAutoresAsync(), "Codigo", "Apellido", libroDto.AutorId);
+            ViewData["CategoriaId"] = new SelectList(await _categoriaService.GetAllCategoriasAsync(), "Codigo", "Nombre", libroDto.CategoriaId);
+            return View(libroDto);
         }
 
         // GET: Libros/Edit/5
@@ -80,13 +78,13 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var libro = await _context.Libros.FindAsync(id);
+            var libro = await _libroService.GetLibroByIdAsync(id.Value);
             if (libro == null)
             {
                 return NotFound();
             }
-            ViewData["AutorId"] = new SelectList(_context.Autores, "Id", "Apellido", libro.AutorId);
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", libro.CategoriaId);
+            ViewData["AutorId"] = new SelectList(await _autorService.GetAllAutoresAsync(), "Codigo", "Apellido", libro.AutorId);
+            ViewData["CategoriaId"] = new SelectList(await _categoriaService.GetAllCategoriasAsync(), "Codigo", "Nombre", libro.CategoriaId);
             return View(libro);
         }
 
@@ -95,36 +93,25 @@ namespace mr211604_desafio01.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Titulo,FechaPublicacion,AutorId,CategoriaId")] Libro libro)
+        public async Task<IActionResult> Edit(int id, LibroDto libroDto)
         {
-            if (id != libro.Id)
+            if (id != libroDto.Codigo)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                try
+                var result = await _libroService.UpdateLibroAsync(libroDto);
+                if (result == null)
                 {
-                    _context.Update(libro);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!LibroExists(libro.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AutorId"] = new SelectList(_context.Autores, "Id", "Apellido", libro.AutorId);
-            ViewData["CategoriaId"] = new SelectList(_context.Categorias, "Id", "Nombre", libro.CategoriaId);
-            return View(libro);
+            ViewData["AutorId"] = new SelectList(await _autorService.GetAllAutoresAsync(), "Codigo", "Apellido", libroDto.AutorId);
+            ViewData["CategoriaId"] = new SelectList(await _categoriaService.GetAllCategoriasAsync(), "Codigo", "Nombre", libroDto.CategoriaId);
+            return View(libroDto);
         }
 
         // GET: Libros/Delete/5
@@ -135,10 +122,7 @@ namespace mr211604_desafio01.Controllers
                 return NotFound();
             }
 
-            var libro = await _context.Libros
-                .Include(l => l.Autor)
-                .Include(l => l.Categoria)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var libro = await _libroService.GetLibroByIdAsync(id.Value);
             if (libro == null)
             {
                 return NotFound();
@@ -152,19 +136,8 @@ namespace mr211604_desafio01.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var libro = await _context.Libros.FindAsync(id);
-            if (libro != null)
-            {
-                _context.Libros.Remove(libro);
-            }
-
-            await _context.SaveChangesAsync();
+            await _libroService.DeleteLibroAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool LibroExists(int id)
-        {
-            return _context.Libros.Any(e => e.Id == id);
         }
     }
 }

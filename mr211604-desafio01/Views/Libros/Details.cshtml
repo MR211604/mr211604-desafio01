@@ -1,4 +1,4 @@
-@model Biblioteca.Entities.Models.Libro
+@model Biblioteca.Entities.Dtos.LibroDto
 
 @{
     ViewData["Title"] = "Details";
@@ -23,20 +23,20 @@
             @Html.DisplayFor(model => model.FechaPublicacion)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Autor)
+            @Html.DisplayNameFor(model => model.AutorId)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Autor.Apellido)
+            @Html.DisplayFor(model => model.AutorId)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Categoria)
+            @Html.DisplayNameFor(model => model.CategoriaId)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Categoria.Nombre)
+            @Html.DisplayFor(model => model.CategoriaId)
         </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model?.Codigo">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>

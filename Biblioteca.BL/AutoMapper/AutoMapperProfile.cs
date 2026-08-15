@@ -20,6 +20,7 @@ namespace Biblioteca.BL.AutoMapper
             .ReverseMap();
 
             CreateMap<Categoria, CategoriaDto>()
+            .ForMember(destination => destination.Codigo, opts => opts.MapFrom(source => source.Id))
             .ForMember(destination => destination.Nombre, opts => opts.MapFrom(source => source.Nombre))
             .ReverseMap();
 
